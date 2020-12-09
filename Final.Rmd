@@ -41,7 +41,6 @@ Fjoin <-
 Fjoin
 ```
 
-
 I wanted to only view cases where we know what house each character was from which is why I filtered out cases that didn't have a definite house. Also, many people were listed many times with different numbers of aggressions, so I needed to combine the aggressions for each person.
 ```{r}
 aggressionperPerson <-
