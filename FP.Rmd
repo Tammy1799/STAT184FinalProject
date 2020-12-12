@@ -1,0 +1,99 @@
+---
+title: 'Final Project Report'
+author: "Tammy Stugan"
+date: "Due December 13, 2020"
+---
+##Purpose
+### Guiding Question
+In the Harry Potter series, is the number of aggressions by a House indidcative of the blood status within that House?
+
+##Set up
+###Load in necessary libraries to perform code chunks
+```{r}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+### Data Access
+```{r}
+characters <- read.csv("Characters.csv", sep=";")
+aggression <- read.csv("harry_potter_aggression_full.csv")
+```
+
+###View and learn more about the datasets. 
+```{r}
+head(characters)
+```
+
+```{r}
+glimpse(aggression)
+```
+
+
+## Data Wrangling
+I combined the characters and aggressions tables together so that information of the person like house and blood type can now be associated with number of aggressions.
+```{r}
+Fjoin <-
+  characters %>%
+  full_join(aggression, by = "Name")
+Fjoin
+```
+
+I wanted to only view cases where we know what house each character was from which is why I filtered out cases that didn't have a definite house. Also, many people were listed many times with different numbers of aggressions, so I needed to combine the aggressions for each person.
+```{r}
+aggressionperPerson <-
+  Fjoin %>%
+  filter(!is.na(House), House != "") %>%
+  group_by(Name, House, Blood.status) %>%
+  summarise(totalAggressions = sum(aggressions))
+aggressionperPerson
+```
+
+
+## Data Visualization
+For the following 3 graphs, I filtered out where blood status was not definite for a person, and the house, Durmstrang, because it is not actually considered to be a house but rather a school.
+##Is this good enough for layered graphic
+```{r}
+VisualOne<-
+  aggressionperPerson %>%
+  filter(grepl("blood", Blood.status, ignore.case = TRUE), House != "Durmstrang Institute") %>%
+  ggplot(aes(x= totalAggressions)) +
+  geom_density(aes(color = Blood.status)) +
+  geom_density(aes(color = House)) +
+  xlim(0, 15)
+VisualOne
+```
+I made this graph to show the relationship between the density of blood type and house type for aggressions. This graph is important because it shows if there is a relationship between the blood type and house type, it could affect the number of aggressions. For example, we can see that the Ravenclaw house's aggressions does not have a clear relationship with aggressions of people being from a certain blood type so we cannot say that blood type plays a role in the number of aggressions in the Ravenclaw house. Also, I made this type of graph so that one could easily visualize all the aggression related to different blood types and house types at once.
+
+```{r}
+VisualTwo<-
+  aggressionperPerson %>%
+  filter(grepl("blood", Blood.status, ignore.case = TRUE), House != "Durmstrang Institute", !is.na(totalAggressions)) %>%
+  spread(key = House, value = totalAggressions) %>%
+  ggplot(aes(x = Gryffindor)) +
+  geom_bar(aes(fill = Blood.status), position = "dodge")
+VisualTwo
+```
+From the previous graph, we can see that the lines for Gryffindor and pure-blood almost match exactly, but it does have a slight overlap with half-blood. Therefore, I made this graph to go into more detail about the number of aggressions by each blood type within that house. From this graph, we can clearly see that the number of attacks are generally by people who are pure-blood and that there is a high number of people who are pure-blood who have made around 5 aggressions. This graph helps us answer our question of the blood type within a house being indicative of the number of aggressions for that house.
+
+```{r}
+VisualThree <-
+aggressionperPerson %>%
+  filter(grepl("blood", Blood.status, ignore.case = TRUE), House != "Durmstrang Institute", !is.na(totalAggressions)) %>%
+  group_by(House) %>%
+  mutate(totalAgHouse = sum(totalAggressions)) %>%
+  mutate(percentage = totalAggressions/totalAgHouse) %>%
+  ggplot(aes(x = totalAggressions, y = percentage)) +
+  geom_point(aes(color = House, shape = Blood.status)) +
+  geom_smooth(se = FALSE)
+VisualThree
+```
+I made this graph to look at between the houses, how much of the number of aggressions by a blood type make up that house's overall number of aggressions. I did this because I wanted to examine the proportion of what blood status can play into the total number of aggressions. This graph is similar to the previous graph because it looks at proportion but it also includes the other houses so we can make a comparison between how blood type plays a part in proportion of each house. I added geom_smooth to look at the relationship of House and blood type between totalAggressions and percentage. Also, this since this graph can be easily read with the amount of cases that we want to observe. 
+
+
+## Findings and Conclusions
+What I found is that blood status within a house is indicative of how many aggressions that House has, depending on the House. From the first graph, Gryffindor's aggressions mainly come from people who are pure-blood; Hufflepuff and Ravenclaw seems to slightly correlate with half-blood but not as much as Gryffindor; Syltherin is not coorelated with either blood type when looking at up to 15 number of aggressions. From the second graph, we can see the details of how much aggression is caused by blood-type within Gryffindor and from that graph we can see that there is a significant difference between pure-blood causing the number of aggressions over half-blood. The third graph, we can see that Slytherin pure-bloods play into the overall proportion of aggressions the most, Ravenclaw half-bloods play into the overall proportion of aggressions, and Hufflepuff half-bloods play more into the overall proportion of aggressions than Hufflepuff pure-bloods. We can also see from the third graph that there are a few cases where one's total aggressions make up the total proportion of aggressions from that house.
+
+
