@@ -24,11 +24,11 @@ aggression <- read.csv("harry_potter_aggression_full.csv")
 
 ###View and learn more about the datasets. 
 ```{r}
-#head(characters)
+head(characters)
 ```
 
 ```{r}
-#glimpse(aggression)
+glimpse(aggression)
 ```
 
 
